@@ -2,30 +2,59 @@
 
 ## 1. Abstract / Overview
 
-The primary objective of this project is to investigate and implement two-dimensional frequency domain filtering techniques for digital image processing. By leveraging the convolution theorem and Fourier transform properties, the project demonstrates the manipulation of spatial frequencies to achieve phenomena such as low-pass (blurring/smoothing), high-pass (edge detection), and custom spectral filtering. This work provides a rigorous programmatic foundation for understanding optical principles simulated in a digital computing environment.
+This project implements two-dimensional frequency-domain filtering for digital images. Using the convolution theorem and the properties of the Fourier transform, it shows how manipulating spatial frequencies produces low-pass (smoothing), high-pass (sharp transitions) and custom spectral filtering. It serves as a hands-on, programmatic introduction to the principles of Fourier optics.
 
 ## 2. Methodology
 
-The core computational approach relies on the Discrete Fourier Transform (DFT), specifically optimized via the Fast Fourier Transform (FFT) algorithm computationally backed by SciPy. 
+The approach relies on the Discrete Fourier Transform (DFT), computed with the Fast Fourier Transform (FFT) from SciPy.
 
-*   **Coordinate Transformation and Shift:** Images are transformed from the spatial domain $(x, y)$ to the spatial frequency domain $(u, v)$. The zero-frequency (DC) component is systematically shifted to the center of the spectrum for symmetric filter application.
-*   **Filter Implementation (`Filter.py`):** Mathematical filter masks $H(u,v)$, specifically a `CircleFilter` (acting as ideal low-pass, high-pass, or band-pass filters based on inner/outer radii) and a `LineFilter`, are dynamically generated. These matrices are multiplied point-wise with the shifted Fourier spectrum $F(u,v)$ of the input image. 
-*   **Image Handling Iteration (`ImageHandler.py`):** Encapsulates the pipeline of gray-scale conversion (via Pillow), spatial domain convolution, spectrum visualization (mapping axes from $-\pi$ to $\pi$ on a logarithmic scale), and executing the Inverse Fast Fourier Transform (IFFT) to reconstruct the filtered spatial domain image $g(x,y)$.
+*   **Coordinate Transformation and Shift:** Images are transformed from the spatial domain $(x, y)$ to the spatial-frequency domain $(u, v)$. The zero-frequency (DC) component is shifted to the centre of the spectrum so that filter masks can be centred on it.
+*   **Filter Implementation (`filters.py`):** Filter masks $H(u,v)$ are generated on demand: `CircleFilter` (ideal low-pass, high-pass, band-pass or band-stop, depending on its radii and `outside` flag) and `LineFilter` (zeroed lines). Each mask is multiplied point-wise with the shifted spectrum $F(u,v)$ of the image.
+*   **Image Handling Iteration (`image_handler.py`):** `ImageHandler` wraps the pipeline: grayscale conversion (Pillow), spatial-domain convolution, log-scale spectrum plots with axes from $-\pi$ to $\pi$, and the inverse FFT that reconstructs the filtered image $g(x,y)$.
 
 $$ g(x,y) = \mathcal{F}^{-1} \{ F(u,v) \cdot H(u,v) \} $$
 
 ## 3. Dataset & Preprocessing
 
-The spatial inputs utilized in this study consist of various standardized grayscale and RGB images (stored in the `/pics` directory, including diverse patterns like sine waves and photographic imagery). 
+The inputs are grayscale and colour images in `pics/`, including synthetic sine-wave and line patterns and photographs.
 
-**Preprocessing Pipeline:**
-1. **Channel Reduction:** Multi-channel images are converted to single-channel (`L` mode) matrices representing grayscale intensities via the Pillow library.
-2. **Padding and Extraction:** Array padding functions structurally support kernel convolution operations directly into numerical matrices representing real magnitudes.
+**Preprocessing:**
+1. **Channel reduction:** Pillow converts every image to single-channel grayscale (`L` mode).
+2. **Kernel padding:** The notebook's `padKernal` helper zero-pads a convolution kernel to the image size, keeping it centred.
 
 ## 4. Results & Discussion
 
-The implementation successfully demonstrates the theoretical expectations of spatial frequency manipulation across $14$ parameterized tests found in the main notebook. 
+The 14 numbered cases in `fourier_analysis.ipynb` (0–13) match the theoretical expectations.
 
-*   **Low-Pass / High-Pass Filtering:** Demonstrated directly via circle filters; effectively attenuates high-frequency features or isolates sharp transitions.
-*   **Pattern Extraction:** Tests on pure sine-wave images visually correlate spatial orientation with distinct impulses located within the respective spectral origin axes.
+*   **Low-Pass / High-Pass Filtering:** Circle filters remove high-frequency detail (low-pass) or keep only sharp transitions (high-pass); ring filters give band-pass and band-stop behaviour.
+*   **Sine-wave spectra:** A pure sine-wave image produces distinct impulses in its spectrum, and the impulses' orientation follows the stripes' orientation.
 
+## 5. Setup & Usage
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Open `fourier_analysis.ipynb` in Jupyter (install `jupyterlab` or `ipykernel` separately) and run all cells. Each of the 14 cases is run by `run_case()`.
+
+`ImageHandler.showFourier()` renders its axis labels with LaTeX, so it needs a LaTeX installation.
+
+Lint and format with [ruff](https://docs.astral.sh/ruff/):
+
+```bash
+ruff check .
+ruff format .
+```
+
+## 6. Project Structure
+
+| Path | Purpose |
+|---|---|
+| `filters.py` | `CircleFilter` and `LineFilter` spectrum masks |
+| `image_handler.py` | `ImageHandler`: loading, FFT, filtering, convolution |
+| `fourier_analysis.ipynb` | The 14 demonstration cases |
+| `pics/` | Input images |
+| `requirements.txt` | Runtime dependencies |
+| `ruff.toml` | Lint and format configuration |
